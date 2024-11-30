@@ -45,6 +45,8 @@ namespace Hqub.Lastfm.Client
 
         public static bool Validate(AuthData data, bool userAuth = false)
         {
+
+            
             if (string.IsNullOrEmpty(data.ApiKey))
             {
                 return false;
@@ -59,8 +61,25 @@ namespace Hqub.Lastfm.Client
             {
                 return true;
             }
-
             return !string.IsNullOrEmpty(data.User) && !string.IsNullOrEmpty(data.Password);
+        }
+
+
+        public static AuthData SetAPIData(string apiKey, string apiSecret)
+        {
+            return new AuthData()
+            {
+                ApiKey = apiKey,
+                ApiSecret = apiSecret
+            };
+        }
+        public static AuthData SetUNameAndUPass(string user, string password)
+        {
+            return new AuthData()
+            {
+                User = user,
+                Password = password
+            };
         }
 
         public static AuthData Create(string[] args)

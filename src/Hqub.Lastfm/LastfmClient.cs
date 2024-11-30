@@ -170,8 +170,8 @@ namespace Hqub.Lastfm
         {
             var request = CreateRequest("auth.getMobileSession");
 
-            request.Parameters["username"] = username;
-            request.Parameters["password"] = password;
+            request.Parameters["username"] = username; //when you get user email and password from ui, pass here to save in their acc
+            request.Parameters["password"] = password;// when you get user email and password from ui, pass here to save in their acc
 
             request.Sign();
 

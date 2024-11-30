@@ -80,9 +80,9 @@ namespace Hqub.Lastfm
 
             var doc = await request.PostAsync();
 
-            var s = ResponseParser.Default;
+            ResponseParser s = ResponseParser.Default;
 
-            var r = s.ParseScrobbles(doc.Element("lfm").Element("scrobbles"));
+            ScrobbleResponse r = s.ParseScrobbles(doc.Element("lfm").Element("scrobbles"));
 
             response.Accepted += r.Accepted;
             response.Ignored += r.Ignored;

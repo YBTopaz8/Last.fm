@@ -1,5 +1,6 @@
 ﻿using Hqub.Lastfm.Cache;
 using System;
+using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Reflection;
@@ -11,7 +12,7 @@ namespace Hqub.Lastfm.Client
     class Program
     {
         // Enable testing of MusicBrainz endpoints
-        internal const bool TEST_MUSICBRAINZ = false;
+        internal const bool TEST_MUSICBRAINZ = true;
 
         private static void Main(string[] args)
         {
@@ -20,6 +21,8 @@ namespace Hqub.Lastfm.Client
             try
             {
                 var task = RunExamples(AuthData.Create(args));
+                Debug.WriteLine("After RunExamples");
+
 
                 task.Wait();
             }
@@ -29,12 +32,12 @@ namespace Hqub.Lastfm.Client
                 {
                     if (item.InnerException == null)
                     {
-                        Console.WriteLine(item.Message);
+                        Debug.WriteLine(item.Message);
                     }
                     else
                     {
                         // Display inner exception.
-                        Console.WriteLine(item.InnerException.Message);
+                        Debug.WriteLine(item.InnerException.Message);
                     }
                 }
             }
@@ -72,19 +75,21 @@ namespace Hqub.Lastfm.Client
             };
 
             Header("Example 1");
-            await Example1.Run(client, "Calexico");
+            //await Example1.Run(client, "Calexico");
 
             Header("Example 2");
-            await Example2.Run(client, "Feast of Wire");
+            //await Example2.Run(client, "Feast of Wire");
 
             Header("Example 3");
-            await Example3.Run(client, "Alone Again Or", "Calexico");
+            //await Example3.Run(client, "A-okay", "BlackWave");
+            Header("Example 3");
+            //await Example3.Run(client, "Baby Queen", "Gorillaz");
 
             Header("Example 4");
-            await Example4.Run(client, "rock");
+            //await Example4.Run(client, "rock");
 
             Header("Example 5");
-            await Example5.Run(client, "RJ");
+            //await Example5.Run(client, "RJ");
 
             if (!AuthData.Validate(auth, true))
             {

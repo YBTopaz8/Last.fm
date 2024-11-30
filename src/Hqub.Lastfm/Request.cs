@@ -84,6 +84,7 @@ namespace Hqub.Lastfm
 
                     if (!response.IsSuccessStatusCode)
                     {
+                        
                         throw CreateServiceException(stream, response);
                     }
 
@@ -111,17 +112,17 @@ namespace Hqub.Lastfm
 
             var content = new FormUrlEncodedContent(Parameters);
 
-            using (var response = await client.PostAsync(new Uri(ROOT_SSL), content, ct).ConfigureAwait(false))
+            using var response = await client.PostAsync(new Uri(ROOT_SSL), content, ct).ConfigureAwait(false);
+            
+            var stream = await response.Content.ReadAsStreamAsync().ConfigureAwait(false);
+
+            if (!response.IsSuccessStatusCode)
             {
-                var stream = await response.Content.ReadAsStreamAsync().ConfigureAwait(false);
-
-                if (!response.IsSuccessStatusCode)
-                {
-                    throw CreateServiceException(stream, response);
-                }
-
-                return GetXDocument(stream);
+                throw CreateServiceException(stream, response);
             }
+
+            return GetXDocument(stream);
+            
         }
 
         internal void EnsureAuthenticated()
