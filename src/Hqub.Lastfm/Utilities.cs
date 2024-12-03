@@ -1,46 +1,45 @@
-namespace Hqub.Lastfm
+namespace Hqub.Lastfm;
+
+using System;
+
+static class Utilities
 {
-    using System;
+    public const string LASTFM_SECURE = "https://www.last.fm/";
 
-    static class Utilities
+    public static DateTime TimestampToDateTime(long timestamp, DateTimeKind kind = DateTimeKind.Utc)
     {
-        public const string LASTFM_SECURE = "https://www.last.fm/";
+        return new DateTime(1970, 1, 1, 0, 0, 0, 0, kind).AddSeconds(timestamp).ToLocalTime();
+    }
 
-        public static DateTime TimestampToDateTime(long timestamp, DateTimeKind kind = DateTimeKind.Utc)
+    public static long DateTimeToUtcTimestamp(DateTime dateTime)
+    {
+        DateTime baseDate = new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc);
+
+        TimeSpan span = dateTime.ToUniversalTime() - baseDate;
+
+        return (long)span.TotalSeconds;
+    }
+
+    public static string GetPeriod(Period period)
+    {
+        switch (period)
         {
-            return new DateTime(1970, 1, 1, 0, 0, 0, 0, kind).AddSeconds(timestamp).ToLocalTime();
+            case Period.Overall:
+                return "overall";
+            case Period.SevenDay:
+                return "7day";
+            case Period.OneMonth:
+                return "1month";
+            case Period.ThreeMonth:
+                return "3month";
+            case Period.SixMonth:
+                return "6month";
+            case Period.TwelveMonth:
+                return "12month";
+            default:
+                break;
         }
 
-        public static long DateTimeToUtcTimestamp(DateTime dateTime)
-        {
-            DateTime baseDate = new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc);
-
-            TimeSpan span = dateTime.ToUniversalTime() - baseDate;
-
-            return (long)span.TotalSeconds;
-        }
-
-        public static string GetPeriod(Period period)
-        {
-            switch (period)
-            {
-                case Period.Overall:
-                    return "overall";
-                case Period.SevenDay:
-                    return "7day";
-                case Period.OneMonth:
-                    return "1month";
-                case Period.ThreeMonth:
-                    return "3month";
-                case Period.SixMonth:
-                    return "6month";
-                case Period.TwelveMonth:
-                    return "12month";
-                default:
-                    break;
-            }
-
-            return "overall";
-        }
+        return "overall";
     }
 }

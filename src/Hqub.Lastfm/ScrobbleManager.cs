@@ -1,151 +1,151 @@
 ﻿
-namespace Hqub.Lastfm
+namespace Hqub.Lastfm;
+
+using Hqub.Lastfm.Entities;
+using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
+using System.Threading.Tasks;
+
+class ScrobbleManager
 {
-    using Hqub.Lastfm.Entities;
-    using System;
-    using System.Collections.Generic;
-    using System.Linq;
-    using System.Threading.Tasks;
+    private const int MAX_SCROBBLES = 50;
 
-    class ScrobbleManager
+    LastfmClient client;
+
+    public ScrobbleManager(LastfmClient client)
     {
-        private const int MAX_SCROBBLES = 50;
+        this.client = client;
+    }
 
-        LastfmClient client;
+    public async Task<ScrobbleResponse> ScrobbleAsync(IEnumerable<Scrobble> scrobbles)
+    {
+        var _ = await SendCachedScrobblesAsync();
 
-        public ScrobbleManager(LastfmClient client)
+        return await SendScrobblesAsync(scrobbles.ToList());
+    }
+
+    public async Task<ScrobbleResponse> SendCachedScrobblesAsync()
+    {
+        var cache = client.ScrobbleCache;
+
+        if (cache == null) return new ScrobbleResponse();
+
+        var scrobbles = (await client.ScrobbleCache.Get(true)).ToList();
+
+        var response = await SendScrobblesAsync(scrobbles);
+
+        if (response.Accepted < scrobbles.Count)
         {
-            this.client = client;
+            // Only re-add scrobbles that were rejected due to server error.
+            // See https://www.last.fm/api/scrobbling#id3
+            await cache.Add(response.Scrobbles.Where(s => IsServerError(s.ErrorCode)));
         }
 
-        public async Task<ScrobbleResponse> ScrobbleAsync(IEnumerable<Scrobble> scrobbles)
-        {
-            var _ = await SendCachedScrobblesAsync();
+        return response;
+    }
 
-            return await SendScrobblesAsync(scrobbles.ToList());
+    internal async Task<ScrobbleResponse> SendScrobblesAsync(List<Scrobble> scrobbles)
+    {
+        var response = new ScrobbleResponse();
+
+        int i = 0, count = scrobbles.Count;
+
+        while (i * MAX_SCROBBLES < count)
+        {
+            var batch = scrobbles.Skip(i * MAX_SCROBBLES).Take(MAX_SCROBBLES);
+
+            await SendScrobbleBatchAsync(batch.ToList(), response);
+
+            i++;
+        }
+        Debug.WriteLine(response.ToString());
+        return response;
+    }
+
+    internal async Task SendScrobbleBatchAsync(List<Scrobble> scrobbles, ScrobbleResponse response)
+    {
+        var request = client.CreateRequest("track.scrobble");
+
+        var p = request.Parameters;
+
+        int i = 0;
+
+        foreach (var item in scrobbles)
+        {
+            SetScrobbleParameters(p, i++, item);
         }
 
-        public async Task<ScrobbleResponse> SendCachedScrobblesAsync()
+        // TODO: should exceptions be catched here?
+
+        var doc = await request.PostAsync();
+
+        ResponseParser s = ResponseParser.Default;
+
+        ScrobbleResponse r = s.ParseScrobbles(doc.Element("lfm").Element("scrobbles"));
+
+        response.Accepted += r.Accepted;
+        response.Ignored += r.Ignored;
+        response.Scrobbles.AddRange(r.Scrobbles);
+    }
+
+    internal void SetScrobbleParameters(RequestParameters p, int i, Scrobble s)
+    {
+        if (string.IsNullOrEmpty(s.Artist))
         {
-            var cache = client.ScrobbleCache;
-
-            if (cache == null) return new ScrobbleResponse();
-
-            var scrobbles = (await client.ScrobbleCache.Get(true)).ToList();
-
-            var response = await SendScrobblesAsync(scrobbles);
-
-            if (response.Accepted < scrobbles.Count)
-            {
-                // Only re-add scrobbles that were rejected due to server error.
-                // See https://www.last.fm/api/scrobbling#id3
-                await cache.Add(response.Scrobbles.Where(s => IsServerError(s.ErrorCode)));
-            }
-
-            return response;
+            throw new ArgumentNullException("Artist");
         }
 
-        internal async Task<ScrobbleResponse> SendScrobblesAsync(List<Scrobble> scrobbles)
+        if (string.IsNullOrEmpty(s.Track))
         {
-            var response = new ScrobbleResponse();
-
-            int i = 0, count = scrobbles.Count;
-
-            while (i * MAX_SCROBBLES < count)
-            {
-                var batch = scrobbles.Skip(i * MAX_SCROBBLES).Take(MAX_SCROBBLES);
-
-                await SendScrobbleBatchAsync(batch.ToList(), response);
-
-                i++;
-            }
-
-            return response;
+            throw new ArgumentNullException("Track");
         }
 
-        internal async Task SendScrobbleBatchAsync(List<Scrobble> scrobbles, ScrobbleResponse response)
+        if (s.Date == default)
         {
-            var request = client.CreateRequest("track.scrobble");
-
-            var p = request.Parameters;
-
-            int i = 0;
-
-            foreach (var item in scrobbles)
-            {
-                SetScrobbleParameters(p, i++, item);
-            }
-
-            // TODO: should exceptions be catched here?
-
-            var doc = await request.PostAsync();
-
-            ResponseParser s = ResponseParser.Default;
-
-            ScrobbleResponse r = s.ParseScrobbles(doc.Element("lfm").Element("scrobbles"));
-
-            response.Accepted += r.Accepted;
-            response.Ignored += r.Ignored;
-            response.Scrobbles.AddRange(r.Scrobbles);
+            throw new ArgumentNullException("TimeStamp");
         }
 
-        internal void SetScrobbleParameters(RequestParameters p, int i, Scrobble s)
+        string index = string.Format("[{0}]", i);
+
+        p.Add("artist" + index, s.Artist);
+        p.Add("track" + index, s.Track);
+        p.Add("timestamp" + index, Utilities.DateTimeToUtcTimestamp(s.Date).ToString());
+
+        if (!string.IsNullOrEmpty(s.Album))
         {
-            if (string.IsNullOrEmpty(s.Artist))
-            {
-                throw new ArgumentNullException("Artist");
-            }
-
-            if (string.IsNullOrEmpty(s.Track))
-            {
-                throw new ArgumentNullException("Track");
-            }
-
-            if (s.Date == default)
-            {
-                throw new ArgumentNullException("TimeStamp");
-            }
-
-            string index = string.Format("[{0}]", i);
-
-            p.Add("artist" + index, s.Artist);
-            p.Add("track" + index, s.Track);
-            p.Add("timestamp" + index, Utilities.DateTimeToUtcTimestamp(s.Date).ToString());
-
-            if (!string.IsNullOrEmpty(s.Album))
-            {
-                p.Add("album" + index, s.Album);
-            }
-
-            if (!s.ChosenByUser)
-            {
-                p.Add("chosenByUser" + index, "0");
-            }
-
-            if (!string.IsNullOrEmpty(s.MBID))
-            {
-                p.Add("mbid" + index, s.MBID);
-            }
-
-            if (!string.IsNullOrEmpty(s.AlbumArtist))
-            {
-                p.Add("albumArtist" + index, s.AlbumArtist);
-            }
-
-            if (s.Duration > 0)
-            {
-                p.Add("duration" + index, s.Duration.ToString());
-            }
-
-            if (s.TrackNumber > 0)
-            {
-                p.Add("trackNumber" + index, s.TrackNumber.ToString());
-            }
+            p.Add("album" + index, s.Album);
         }
 
-        private bool IsServerError(int code)
+        if (!s.ChosenByUser)
         {
-            return code == 11 || code == 16;
+            p.Add("chosenByUser" + index, "0");
         }
+
+        if (!string.IsNullOrEmpty(s.MBID))
+        {
+            p.Add("mbid" + index, s.MBID);
+        }
+
+        if (!string.IsNullOrEmpty(s.AlbumArtist))
+        {
+            p.Add("albumArtist" + index, s.AlbumArtist);
+        }
+
+        if (s.Duration > 0)
+        {
+            p.Add("duration" + index, s.Duration.ToString());
+        }
+
+        if (s.TrackNumber > 0)
+        {
+            p.Add("trackNumber" + index, s.TrackNumber.ToString());
+        }
+    }
+
+    private bool IsServerError(int code)
+    {
+        return code == 11 || code == 16;
     }
 }

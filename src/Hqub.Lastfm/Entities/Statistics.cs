@@ -1,23 +1,22 @@
-﻿namespace Hqub.Lastfm.Entities
+﻿namespace Hqub.Lastfm.Entities;
+
+using System.Runtime.Serialization;
+
+/// <summary>
+/// Statistics class.
+/// </summary>
+[DataContract(Name = "statistics")]
+public class Statistics
 {
-    using System.Runtime.Serialization;
+    /// <summary>
+    /// Gets or sets the listeners count.
+    /// </summary>
+    [DataMember(Name = "listeners")]
+    public long Listeners { get; set; }
 
     /// <summary>
-    /// Statistics class.
+    /// Gets or sets the play count.
     /// </summary>
-    [DataContract(Name = "statistics")]
-    public class Statistics
-    {
-        /// <summary>
-        /// Gets or sets the listeners count.
-        /// </summary>
-        [DataMember(Name = "listeners")]
-        public long Listeners { get; set; }
-
-        /// <summary>
-        /// Gets or sets the play count.
-        /// </summary>
-        [DataMember(Name = "playcount")]
-        public long PlayCount { get; set; }
-    }
+    [DataMember(Name = "playcount")]
+    public long PlayCount { get; set; }
 }

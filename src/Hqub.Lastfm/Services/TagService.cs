@@ -1,110 +1,109 @@
-﻿namespace Hqub.Lastfm.Services
+﻿namespace Hqub.Lastfm.Services;
+
+using Hqub.Lastfm.Entities;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+
+class TagService : ITagService
 {
-    using Hqub.Lastfm.Entities;
-    using System.Collections.Generic;
-    using System.Threading.Tasks;
+    private readonly LastfmClient client;
 
-    class TagService : ITagService
+    public TagService(LastfmClient client)
     {
-        private readonly LastfmClient client;
+        this.client = client;
+    }
 
-        public TagService(LastfmClient client)
+    /// <inheritdoc />
+    public async Task<Tag> GetInfoAsync(string tag, string lang = null)
+    {
+        var request = client.CreateRequest("tag.getInfo");
+
+        request.Parameters["tag"] = tag;
+
+        if (!string.IsNullOrEmpty(lang))
         {
-            this.client = client;
+            request.Parameters["lang"] = lang;
         }
 
-        /// <inheritdoc />
-        public async Task<Tag> GetInfoAsync(string tag, string lang = null)
-        {
-            var request = client.CreateRequest("tag.getInfo");
+        var doc = await request.GetAsync();
 
-            request.Parameters["tag"] = tag;
+        var s = ResponseParser.Default;
 
-            if (!string.IsNullOrEmpty(lang))
-            {
-                request.Parameters["lang"] = lang;
-            }
+        return s.ReadObject<Tag>(doc.Root.Element("tag"));
+    }
 
-            var doc = await request.GetAsync();
+    /// <inheritdoc />
+    public async Task<PagedResponse<Album>> GetTopAlbumsAsync(string tag, int page = 1, int limit = 50)
+    {
+        var request = client.CreateRequest("tag.getTopAlbums");
 
-            var s = ResponseParser.Default;
+        request.Parameters["tag"] = tag;
 
-            return s.ReadObject<Tag>(doc.Root.Element("tag"));
-        }
+        request.SetPagination(limit, 50, page, 1);
 
-        /// <inheritdoc />
-        public async Task<PagedResponse<Album>> GetTopAlbumsAsync(string tag, int page = 1, int limit = 50)
-        {
-            var request = client.CreateRequest("tag.getTopAlbums");
+        var doc = await request.GetAsync();
 
-            request.Parameters["tag"] = tag;
+        var s = ResponseParser.Default;
 
-            request.SetPagination(limit, 50, page, 1);
+        var response = new PagedResponse<Album>();
 
-            var doc = await request.GetAsync();
+        response.items = s.ReadObjects<Album>(doc, "/lfm/albums/album");
+        response.PageInfo = s.ParseOpenSearch(doc.Root.Element("albums"));
 
-            var s = ResponseParser.Default;
+        return response;
+    }
 
-            var response = new PagedResponse<Album>();
+    /// <inheritdoc />
+    public async Task<PagedResponse<Artist>> GetTopArtistsAsync(string tag, int page = 1, int limit = 50)
+    {
+        var request = client.CreateRequest("tag.getTopArtists");
 
-            response.items = s.ReadObjects<Album>(doc, "/lfm/albums/album");
-            response.PageInfo = s.ParseOpenSearch(doc.Root.Element("albums"));
+        request.Parameters["tag"] = tag;
 
-            return response;
-        }
+        request.SetPagination(limit, 50, page, 1);
 
-        /// <inheritdoc />
-        public async Task<PagedResponse<Artist>> GetTopArtistsAsync(string tag, int page = 1, int limit = 50)
-        {
-            var request = client.CreateRequest("tag.getTopArtists");
+        var doc = await request.GetAsync();
 
-            request.Parameters["tag"] = tag;
+        var s = ResponseParser.Default;
 
-            request.SetPagination(limit, 50, page, 1);
+        var response = new PagedResponse<Artist>();
 
-            var doc = await request.GetAsync();
+        response.items = s.ReadObjects<Artist>(doc, "/lfm/topartists/artist");
+        response.PageInfo = s.ParseOpenSearch(doc.Root.Element("topartists"));
 
-            var s = ResponseParser.Default;
+        return response;
+    }
 
-            var response = new PagedResponse<Artist>();
+    /// <inheritdoc />
+    public async Task<List<Tag>> GetTopTagsAsync()
+    {
+        var request = client.CreateRequest("tag.getTopTags");
 
-            response.items = s.ReadObjects<Artist>(doc, "/lfm/topartists/artist");
-            response.PageInfo = s.ParseOpenSearch(doc.Root.Element("topartists"));
+        var doc = await request.GetAsync();
 
-            return response;
-        }
+        var s = ResponseParser.Default;
 
-        /// <inheritdoc />
-        public async Task<List<Tag>> GetTopTagsAsync()
-        {
-            var request = client.CreateRequest("tag.getTopTags");
+        return s.ReadObjects<Tag>(doc, "/lfm/toptags/tag");
+    }
 
-            var doc = await request.GetAsync();
+    /// <inheritdoc />
+    public async Task<PagedResponse<Track>> GetTopTracksAsync(string tag, int page = 1, int limit = 50)
+    {
+        var request = client.CreateRequest("tag.getTopTracks");
 
-            var s = ResponseParser.Default;
+        request.Parameters["tag"] = tag;
 
-            return s.ReadObjects<Tag>(doc, "/lfm/toptags/tag");
-        }
+        request.SetPagination(limit, 50, page, 1);
 
-        /// <inheritdoc />
-        public async Task<PagedResponse<Track>> GetTopTracksAsync(string tag, int page = 1, int limit = 50)
-        {
-            var request = client.CreateRequest("tag.getTopTracks");
+        var doc = await request.GetAsync();
 
-            request.Parameters["tag"] = tag;
+        var s = ResponseParser.Default;
 
-            request.SetPagination(limit, 50, page, 1);
+        var response = new PagedResponse<Track>();
 
-            var doc = await request.GetAsync();
+        response.items = s.ReadObjects<Track>(doc, "/lfm/tracks/track");
+        response.PageInfo = s.ParseOpenSearch(doc.Root.Element("tracks"));
 
-            var s = ResponseParser.Default;
-
-            var response = new PagedResponse<Track>();
-
-            response.items = s.ReadObjects<Track>(doc, "/lfm/tracks/track");
-            response.PageInfo = s.ParseOpenSearch(doc.Root.Element("tracks"));
-
-            return response;
-        }
+        return response;
     }
 }

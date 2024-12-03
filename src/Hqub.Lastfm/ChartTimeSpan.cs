@@ -1,20 +1,19 @@
-namespace Hqub.Lastfm
+namespace Hqub.Lastfm;
+
+using System;
+
+/// <summary>
+/// A time span of a weekly chart.
+/// </summary>
+public class ChartTimeSpan
 {
-    using System;
+    /// <summary>
+    /// The beginning date.
+    /// </summary>
+    public DateTime From { get; set; }
 
     /// <summary>
-    /// A time span of a weekly chart.
+    /// The end date.
     /// </summary>
-    public class ChartTimeSpan
-    {
-        /// <summary>
-        /// The beginning date.
-        /// </summary>
-        public DateTime From { get; set; }
-
-        /// <summary>
-        /// The end date.
-        /// </summary>
-        public DateTime To { get; set; }
-    }
+    public DateTime To { get; set; }
 }
