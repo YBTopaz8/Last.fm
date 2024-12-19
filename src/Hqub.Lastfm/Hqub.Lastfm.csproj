@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>netstandard2.0;net9.0</TargetFrameworks>
+    <TargetFramework>net9.0</TargetFramework>
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <PackageId>Hqub.Last.fm</PackageId>
@@ -22,7 +22,7 @@
     <RepositoryUrl>https://github.com/avatar29A/Last.fm.git</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageReleaseNotes></PackageReleaseNotes>
-    <LangVersion>12</LangVersion>
+    <LangVersion>latest</LangVersion>
   </PropertyGroup>
 
 </Project>
