@@ -162,6 +162,7 @@ public class LastfmClient
 
     #region Authentication
 
+
     /// <summary>
     /// Authenticate the client <see cref="Session"/> using a username and a password.
     /// </summary>
