@@ -1,304 +1,303 @@
-﻿namespace Hqub.Lastfm.Services
+﻿namespace Hqub.Lastfm.Services;
+
+using Hqub.Lastfm.Entities;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+
+class TrackService : ITrackService
 {
-    using Hqub.Lastfm.Entities;
-    using System;
-    using System.Collections.Generic;
-    using System.Linq;
-    using System.Threading.Tasks;
+    private readonly LastfmClient client;
+    private readonly ScrobbleManager scrobbler;
 
-    class TrackService : ITrackService
+    public TrackService(LastfmClient client, ScrobbleManager scrobbler)
     {
-        private readonly LastfmClient client;
-        private readonly ScrobbleManager scrobbler;
+        this.client = client;
+        this.scrobbler = scrobbler;
+    }
 
-        public TrackService(LastfmClient client, ScrobbleManager scrobbler)
+    /// <inheritdoc />
+    public async Task<PagedResponse<Track>> SearchAsync(string track, string artist = null, int page = 1, int limit = 30)
+    {
+        var request = client.CreateRequest("track.search");
+
+        request.Parameters["track"] = track;
+
+        if (!string.IsNullOrEmpty(artist))
         {
-            this.client = client;
-            this.scrobbler = scrobbler;
+            request.Parameters["artist"] = artist;
         }
 
-        /// <inheritdoc />
-        public async Task<PagedResponse<Track>> SearchAsync(string track, string artist = null, int page = 1, int limit = 30)
+        request.SetPagination(limit, 30, page, 1);
+
+        var doc = await request.GetAsync();
+
+        var s = ResponseParser.Default;
+
+        var response = new PagedResponse<Track>();
+
+        response.items = s.ReadObjects<Track>(doc, "/lfm/results/trackmatches/track");
+        response.PageInfo = s.ParseOpenSearch(doc.Root.Element("results"));
+
+        return response;
+    }
+
+    /// <inheritdoc />
+    public Task<Track> GetInfoAsync(string track, string artist, bool autocorrect = true)
+    {
+        return GetInfoAsync(track, artist, null, autocorrect);
+    }
+
+    /// <inheritdoc />
+    public Task<Track> GetInfoByMbidAsync(string mbid)
+    {
+        return GetInfoAsync(null, null, mbid, false);
+    }
+
+    /// <inheritdoc />
+    public async Task<Track> GetCorrectionAsync(string track, string artist)
+    {
+        var request = client.CreateRequest("track.getCorrection");
+
+        SetParameters(request, track, artist, null);
+
+        var doc = await request.GetAsync();
+
+        var s = ResponseParser.Default;
+
+        return s.ReadObjects<Track>(doc, "/lfm/corrections/correction/track").FirstOrDefault();
+    }
+
+    /// <inheritdoc />
+    public Task<List<Track>> GetSimilarAsync(string track, string artist, int limit = 30, bool autocorrect = true)
+    {
+        return GetSimilarAsync(track, artist, null, limit, autocorrect);
+    }
+
+    /// <inheritdoc />
+    public Task<List<Track>> GetSimilarByMbidAsync(string mbid, int limit = 30)
+    {
+        return GetSimilarAsync(null, null, mbid, limit, false);
+    }
+
+    /// <inheritdoc />
+    public async Task<List<Tag>> GetTagsAsync(string user, string track, string artist, bool autocorrect = true)
+    {
+        if (string.IsNullOrEmpty(user))
         {
-            var request = client.CreateRequest("track.search");
-
-            request.Parameters["track"] = track;
-
-            if (!string.IsNullOrEmpty(artist))
-            {
-                request.Parameters["artist"] = artist;
-            }
-
-            request.SetPagination(limit, 30, page, 1);
-
-            var doc = await request.GetAsync();
-
-            var s = ResponseParser.Default;
-
-            var response = new PagedResponse<Track>();
-
-            response.items = s.ReadObjects<Track>(doc, "/lfm/results/trackmatches/track");
-            response.PageInfo = s.ParseOpenSearch(doc.Root.Element("results"));
-
-            return response;
+            throw new ArgumentException("User name is required.", nameof(user));
         }
 
-        /// <inheritdoc />
-        public Task<Track> GetInfoAsync(string track, string artist, bool autocorrect = true)
+        var request = client.CreateRequest("track.getTags");
+
+        SetParameters(request, track, artist, null, autocorrect);
+
+        request.Parameters["user"] = user;
+
+        var doc = await request.GetAsync();
+
+        var s = ResponseParser.Default;
+
+        return s.ReadObjects<Tag>(doc, "/lfm/tags/tag");
+    }
+
+    /// <inheritdoc />
+    public async Task<List<Tag>> GetTopTagsAsync(string track, string artist, bool autocorrect = true)
+    {
+        var request = client.CreateRequest("track.getTopTags");
+
+        SetParameters(request, track, artist, null, autocorrect);
+
+        var doc = await request.GetAsync();
+
+        var s = ResponseParser.Default;
+
+        return s.ReadObjects<Tag>(doc, "/lfm/toptags/tag");
+    }
+
+    #region Authenticated
+
+    /// <inheritdoc />
+    public async Task<bool> LoveAsync(string track, string artist)
+    {
+        var request = client.CreateRequest("track.love");
+
+        request.EnsureAuthenticated();
+
+        SetParameters(request, track, artist, null, false);
+
+        var doc = await request.PostAsync();
+
+        var s = ResponseParser.Default;
+
+        return s.IsStatusOK(doc.Root);
+    }
+
+    /// <inheritdoc />
+    public async Task<bool> UnloveAsync(string track, string artist)
+    {
+        var request = client.CreateRequest("track.unlove");
+
+        request.EnsureAuthenticated();
+
+        SetParameters(request, track, artist, null, false);
+
+        var doc = await request.PostAsync();
+
+        var s = ResponseParser.Default;
+
+        return s.IsStatusOK(doc.Root);
+    }
+
+    /// <inheritdoc />
+    public async Task<bool> UpdateNowPlayingAsync(string track, string artist, int trackNumber = 0, string album = null, string albumArtist = null)
+    {
+        var request = client.CreateRequest("track.updateNowPlaying");
+
+        request.EnsureAuthenticated();
+
+        SetParameters(request, track, artist, null, false);
+
+        if (trackNumber > 0)
         {
-            return GetInfoAsync(track, artist, null, autocorrect);
+            request.Parameters["trackNumber"] = trackNumber.ToString();
         }
 
-        /// <inheritdoc />
-        public Task<Track> GetInfoByMbidAsync(string mbid)
+        if (!string.IsNullOrEmpty(album))
         {
-            return GetInfoAsync(null, null, mbid, false);
+            request.Parameters["album"] = album;
         }
 
-        /// <inheritdoc />
-        public async Task<Track> GetCorrectionAsync(string track, string artist)
+        if (!string.IsNullOrEmpty(albumArtist))
         {
-            var request = client.CreateRequest("track.getCorrection");
-
-            SetParameters(request, track, artist, null);
-
-            var doc = await request.GetAsync();
-
-            var s = ResponseParser.Default;
-
-            return s.ReadObjects<Track>(doc, "/lfm/corrections/correction/track").FirstOrDefault();
+            request.Parameters["albumArtist"] = albumArtist;
         }
 
-        /// <inheritdoc />
-        public Task<List<Track>> GetSimilarAsync(string track, string artist, int limit = 30, bool autocorrect = true)
-        {
-            return GetSimilarAsync(track, artist, null, limit, autocorrect);
-        }
+        var doc = await request.PostAsync();
 
-        /// <inheritdoc />
-        public Task<List<Track>> GetSimilarByMbidAsync(string mbid, int limit = 30)
-        {
-            return GetSimilarAsync(null, null, mbid, limit, false);
-        }
+        var s = ResponseParser.Default;
 
-        /// <inheritdoc />
-        public async Task<List<Tag>> GetTagsAsync(string user, string track, string artist, bool autocorrect = true)
-        {
-            if (string.IsNullOrEmpty(user))
-            {
-                throw new ArgumentException("User name is required.", nameof(user));
-            }
+        return s.IsStatusOK(doc.Root);
+    }
 
-            var request = client.CreateRequest("track.getTags");
+    /// <inheritdoc />
+    public async Task<ScrobbleResponse> ScrobbleAsync(Scrobble scrobble)
+    {
+        return await ScrobbleAsync(new List<Scrobble>() { scrobble });
+    }
 
-            SetParameters(request, track, artist, null, autocorrect);
+    /// <inheritdoc />
+    public async Task<ScrobbleResponse> ScrobbleAsync(IEnumerable<Scrobble> scrobbles)
+    {
+        return await scrobbler.ScrobbleAsync(scrobbles);
+    }
 
-            request.Parameters["user"] = user;
+    /// <inheritdoc />
+    public async Task<bool> AddTagsAsync(string track, string artist, IEnumerable<string> tags)
+    {
+        var request = client.CreateRequest("track.addTags");
 
-            var doc = await request.GetAsync();
+        request.EnsureAuthenticated();
 
-            var s = ResponseParser.Default;
+        request.Parameters["tags"] = string.Join(",", tags.Take(10));
 
-            return s.ReadObjects<Tag>(doc, "/lfm/tags/tag");
-        }
+        SetParameters(request, track, artist, null, false);
 
-        /// <inheritdoc />
-        public async Task<List<Tag>> GetTopTagsAsync(string track, string artist, bool autocorrect = true)
-        {
-            var request = client.CreateRequest("track.getTopTags");
+        var doc = await request.PostAsync();
 
-            SetParameters(request, track, artist, null, autocorrect);
+        var s = ResponseParser.Default;
 
-            var doc = await request.GetAsync();
+        return s.IsStatusOK(doc.Root);
+    }
 
-            var s = ResponseParser.Default;
+    /// <inheritdoc />
+    public async Task<bool> RemoveTagAsync(string track, string artist, string tag)
+    {
+        var request = client.CreateRequest("track.removeTag");
 
-            return s.ReadObjects<Tag>(doc, "/lfm/toptags/tag");
-        }
+        request.EnsureAuthenticated();
 
-        #region Authenticated
+        request.Parameters["tag"] = tag;
 
-        /// <inheritdoc />
-        public async Task<bool> LoveAsync(string track, string artist)
-        {
-            var request = client.CreateRequest("track.love");
+        SetParameters(request, track, artist, null, false);
 
-            request.EnsureAuthenticated();
+        var doc = await request.PostAsync();
 
-            SetParameters(request, track, artist, null, false);
+        var s = ResponseParser.Default;
 
-            var doc = await request.PostAsync();
+        return s.IsStatusOK(doc.Root);
+    }
 
-            var s = ResponseParser.Default;
-
-            return s.IsStatusOK(doc.Root);
-        }
-
-        /// <inheritdoc />
-        public async Task<bool> UnloveAsync(string track, string artist)
-        {
-            var request = client.CreateRequest("track.unlove");
-
-            request.EnsureAuthenticated();
-
-            SetParameters(request, track, artist, null, false);
-
-            var doc = await request.PostAsync();
-
-            var s = ResponseParser.Default;
-
-            return s.IsStatusOK(doc.Root);
-        }
-
-        /// <inheritdoc />
-        public async Task<bool> UpdateNowPlayingAsync(string track, string artist, int trackNumber = 0, string album = null, string albumArtist = null)
-        {
-            var request = client.CreateRequest("track.updateNowPlaying");
-
-            request.EnsureAuthenticated();
-
-            SetParameters(request, track, artist, null, false);
-
-            if (trackNumber > 0)
-            {
-                request.Parameters["trackNumber"] = trackNumber.ToString();
-            }
-
-            if (!string.IsNullOrEmpty(album))
-            {
-                request.Parameters["album"] = album;
-            }
-
-            if (!string.IsNullOrEmpty(albumArtist))
-            {
-                request.Parameters["albumArtist"] = albumArtist;
-            }
-
-            var doc = await request.PostAsync();
-
-            var s = ResponseParser.Default;
-
-            return s.IsStatusOK(doc.Root);
-        }
-
-        /// <inheritdoc />
-        public async Task<ScrobbleResponse> ScrobbleAsync(Scrobble scrobble)
-        {
-            return await ScrobbleAsync(new List<Scrobble>() { scrobble });
-        }
-
-        /// <inheritdoc />
-        public async Task<ScrobbleResponse> ScrobbleAsync(IEnumerable<Scrobble> scrobbles)
-        {
-            return await scrobbler.ScrobbleAsync(scrobbles);
-        }
-
-        /// <inheritdoc />
-        public async Task<bool> AddTagsAsync(string track, string artist, IEnumerable<string> tags)
-        {
-            var request = client.CreateRequest("track.addTags");
-
-            request.EnsureAuthenticated();
-
-            request.Parameters["tags"] = string.Join(",", tags.Take(10));
-
-            SetParameters(request, track, artist, null, false);
-
-            var doc = await request.PostAsync();
-
-            var s = ResponseParser.Default;
-
-            return s.IsStatusOK(doc.Root);
-        }
-
-        /// <inheritdoc />
-        public async Task<bool> RemoveTagAsync(string track, string artist, string tag)
-        {
-            var request = client.CreateRequest("track.removeTag");
-
-            request.EnsureAuthenticated();
-
-            request.Parameters["tag"] = tag;
-
-            SetParameters(request, track, artist, null, false);
-
-            var doc = await request.PostAsync();
-
-            var s = ResponseParser.Default;
-
-            return s.IsStatusOK(doc.Root);
-        }
-
-        #endregion
+    #endregion
 
 #nullable enable
-        private async Task<Track> GetInfoAsync(string? track, string? artist, string? mbid, bool autocorrect = true)
+    private async Task<Track> GetInfoAsync(string? track, string? artist, string? mbid, bool autocorrect = true)
+    {
+        var request = client.CreateRequest("track.getInfo");
+
+        SetParameters(request, track, artist, mbid, autocorrect);
+
+        if (!string.IsNullOrEmpty(client.Language))
         {
-            var request = client.CreateRequest("track.getInfo");
-
-            SetParameters(request, track, artist, mbid, autocorrect);
-
-            if (!string.IsNullOrEmpty(client.Language))
-            {
-                request.Parameters["lang"] = client.Language;
-            }
-
-            var doc = await request.GetAsync();
-
-            var s = ResponseParser.Default;
-
-            return s.ReadObject<Track>(doc.Root.Element("track"));
+            request.Parameters["lang"] = client.Language;
         }
 
-        private async Task<List<Track>> GetSimilarAsync(string? track, string? artist, string? mbid, int limit = 30, bool autocorrect = true)
-        {
-            var request = client.CreateRequest("track.getSimilar");
+        var doc = await request.GetAsync();
 
-            SetParameters(request, track, artist, mbid, autocorrect);
+        var s = ResponseParser.Default;
 
-            request.Parameters["limit"] = limit.ToString();
-
-            var doc = await request.GetAsync();
-
-            var s = ResponseParser.Default;
-
-            return s.ReadObjects<Track>(doc, "/lfm/similartracks/track");
-        }
-
-        private void SetParameters(Request request, string? track, string? artist, string? mbid, bool autocorrect = false)
-        {
-            bool missingMbid = string.IsNullOrEmpty(mbid);
-
-            if (missingMbid && string.IsNullOrEmpty(track))
-            {
-                throw new ArgumentException("Track name or MBID is required.", nameof(track));
-            }
-
-            if (missingMbid && string.IsNullOrEmpty(artist))
-            {
-                throw new ArgumentException("Artist name or MBID is required.", nameof(artist));
-            }
-
-            if (missingMbid)
-            {
-                request.Parameters["artist"] = artist;
-                request.Parameters["track"] = track;
-            }
-            else
-            {
-                request.Parameters["mbid"] = mbid;
-            }
-
-            if (autocorrect)
-            {
-                request.Parameters["autocorrect"] = "1";
-            }
-
-            if (!string.IsNullOrEmpty(mbid))
-            {
-                request.Parameters["mbid"] = mbid;
-            }
-        }
-#nullable disable
+        return s.ReadObject<Track>(doc.Root.Element("track"));
     }
+
+    private async Task<List<Track>> GetSimilarAsync(string? track, string? artist, string? mbid, int limit = 30, bool autocorrect = true)
+    {
+        var request = client.CreateRequest("track.getSimilar");
+
+        SetParameters(request, track, artist, mbid, autocorrect);
+
+        request.Parameters["limit"] = limit.ToString();
+
+        var doc = await request.GetAsync();
+
+        var s = ResponseParser.Default;
+
+        return s.ReadObjects<Track>(doc, "/lfm/similartracks/track");
+    }
+
+    private void SetParameters(Request request, string? track, string? artist, string? mbid, bool autocorrect = false)
+    {
+        bool missingMbid = string.IsNullOrEmpty(mbid);
+
+        if (missingMbid && string.IsNullOrEmpty(track))
+        {
+            throw new ArgumentException("Track name or MBID is required.", nameof(track));
+        }
+
+        if (missingMbid && string.IsNullOrEmpty(artist))
+        {
+            throw new ArgumentException("Artist name or MBID is required.", nameof(artist));
+        }
+
+        if (missingMbid)
+        {
+            request.Parameters["artist"] = artist;
+            request.Parameters["track"] = track;
+        }
+        else
+        {
+            request.Parameters["mbid"] = mbid;
+        }
+
+        if (autocorrect)
+        {
+            request.Parameters["autocorrect"] = "1";
+        }
+
+        if (!string.IsNullOrEmpty(mbid))
+        {
+            request.Parameters["mbid"] = mbid;
+        }
+    }
+#nullable disable
 }

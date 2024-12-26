@@ -1,39 +1,38 @@
 ﻿
-namespace Hqub.Lastfm.Cache
+namespace Hqub.Lastfm.Cache;
+
+using System.IO;
+using System.Threading.Tasks;
+
+/// <summary>
+/// A cache that does not cache anything.
+/// </summary>
+public class NullRequestCache : IRequestCache
 {
-    using System.IO;
-    using System.Threading.Tasks;
-
     /// <summary>
-    /// A cache that does not cache anything.
+    /// Gets the default <see cref="NullRequestCache"/> instance.
     /// </summary>
-    public class NullRequestCache : IRequestCache
+    public static NullRequestCache Default { get; } = new NullRequestCache();
+
+    private NullRequestCache()
     {
-        /// <summary>
-        /// Gets the default <see cref="NullRequestCache"/> instance.
-        /// </summary>
-        public static NullRequestCache Default { get; } = new NullRequestCache();
+    }
 
-        private NullRequestCache()
-        {
-        }
-
-        /// <inheritdoc />
-        public Task Add(string request, Stream response)
-        {
+    /// <inheritdoc />
+    public Task Add(string request, Stream response)
+    {
 #if NET45
-            return Task.FromResult(0);
+        return Task.FromResult(0);
 #else
-            return Task.CompletedTask;
+        return Task.CompletedTask;
 #endif
-        }
+    }
 
-        /// <inheritdoc />
-        public Task<bool> TryGetCachedItem(string request, out Stream stream)
-        {
-            stream = null;
+    /// <inheritdoc />
+    public Task<bool> TryGetCachedItem(string request, out Stream stream)
+    {
+        stream = null;
 
-            return Task.FromResult(false);
-        }
+        return Task.FromResult(false);
     }
 }

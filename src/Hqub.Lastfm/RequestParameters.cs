@@ -1,45 +1,44 @@
-namespace Hqub.Lastfm
+namespace Hqub.Lastfm;
+
+using System.Collections.Generic;
+using System.Text;
+using System.Net;
+
+internal class RequestParameters : SortedDictionary<string, string>
 {
-    using System.Collections.Generic;
-    using System.Text;
-    using System.Net;
-
-    internal class RequestParameters : SortedDictionary<string, string>
+    public byte[] ToBytes()
     {
-        public byte[] ToBytes()
+        return Encoding.ASCII.GetBytes(ToString());
+    }
+
+    public string Serialize()
+    {
+        string line = "";
+
+        foreach (var key in Keys)
         {
-            return Encoding.ASCII.GetBytes(ToString());
+            line += key + "\t" + this[key] + "\t";
         }
 
-        public string Serialize()
+        return line;
+    }
+
+    public override string ToString()
+    {
+        var sb = new StringBuilder();
+
+        var e = GetEnumerator();
+
+        while (e.MoveNext())
         {
-            string line = "";
+            var current = e.Current;
 
-            foreach (var key in Keys)
-            {
-                line += key + "\t" + this[key] + "\t";
-            }
-
-            return line;
+            sb.Append(WebUtility.UrlEncode(current.Key));
+            sb.Append("=");
+            sb.Append(WebUtility.UrlEncode(current.Value));
+            sb.Append("&");
         }
 
-        public override string ToString()
-        {
-            var sb = new StringBuilder();
-
-            var e = GetEnumerator();
-
-            while (e.MoveNext())
-            {
-                var current = e.Current;
-
-                sb.Append(WebUtility.UrlEncode(current.Key));
-                sb.Append("=");
-                sb.Append(WebUtility.UrlEncode(current.Value));
-                sb.Append("&");
-            }
-
-            return sb.ToString(0, sb.Length - 1);
-        }
+        return sb.ToString(0, sb.Length - 1);
     }
 }
