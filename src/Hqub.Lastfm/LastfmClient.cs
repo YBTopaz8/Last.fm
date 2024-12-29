@@ -10,7 +10,7 @@ using System.Reflection;
 using System.Threading.Tasks;
 
 /// <summary>
-/// Last.fm client.
+/// Last.fm client singleton.
 /// </summary>
 public class LastfmClient
 {
