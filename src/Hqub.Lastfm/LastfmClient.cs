@@ -175,10 +175,8 @@ public class LastfmClient
     {
         var request = CreateRequest("auth.getMobileSession");
 
-        //request.Parameters["username"] = username; //when you get user email and password from ui, pass here to save in their acc
-        //request.Parameters["password"] = password;// when you get user email and password from ui, pass here to save in their acc
-        //request.Parameters["username"] = "Myeblog"; //when you get user email and password from ui, pass here to save in their acc
-        //request.Parameters["password"] = "YvC3-p4PfddGH4H";// when you get user email and password from ui, pass here to save in their acc
+        request.Parameters["username"] = username; //when you get user email and password from ui, pass here to save in their acc
+        request.Parameters["password"] = password;// when you get user email and password from ui, pass here to save in their acc
 
         request.Sign();
 
