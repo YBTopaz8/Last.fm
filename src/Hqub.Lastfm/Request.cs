@@ -111,7 +111,7 @@ class Request
         }
 
         var content = new FormUrlEncodedContent(Parameters);
-
+        Console.WriteLine(content.ToString());
         using var response = await client.PostAsync(new Uri(ROOT_SSL), content, ct).ConfigureAwait(false);
         
         var stream = await response.Content.ReadAsStreamAsync().ConfigureAwait(false);
@@ -135,17 +135,32 @@ class Request
 
     internal void Sign()
     {
-        var sb = new StringBuilder();
+        var signatureString = new StringBuilder();
 
-        foreach (var item in Parameters.OrderBy(r=>r.Key))
+        var parametersToSign = Parameters
+            .Where(p => p.Key != "api_sig" && p.Key != "format")
+            .OrderBy(p => p.Key, StringComparer.Ordinal);
+
+        foreach (var item in parametersToSign)
         {
-            sb.Append(item.Key);
-            sb.Append(item.Value);
+            signatureString.Append(item.Key);
+            signatureString.Append(item.Value);
         }
 
-        sb.Append(session.ApiSecret);
+        signatureString.Append(session.ApiSecret);
 
-        Parameters["api_sig"] = MD5.ComputeHash(sb.ToString());
+        Parameters["api_sig"] = MD5.ComputeHash(signatureString.ToString());
+        //var sb = new StringBuilder();
+
+        //foreach (var item in Parameters.OrderBy(r=>r.Key))
+        //{
+        //    sb.Append(item.Key);
+        //    sb.Append(item.Value);
+        //}
+
+        //sb.Append(session.ApiSecret);
+
+        //Parameters["api_sig"] = MD5.ComputeHash(sb.ToString());
     }
 
     #region Helper
