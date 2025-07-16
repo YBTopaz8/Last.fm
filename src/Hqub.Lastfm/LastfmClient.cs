@@ -3,6 +3,7 @@ namespace Hqub.Lastfm;
 
 using Hqub.Lastfm.Cache;
 using Hqub.Lastfm.Services;
+
 using System;
 using System.Net;
 using System.Net.Http;
@@ -15,7 +16,7 @@ using System.Threading.Tasks;
 public class LastfmClient
 {
     private static LastfmClient _instance;
-    private static readonly object _lock = new object(); 
+    private static readonly object _lock = new object();
     private static Func<LastfmClient> _factory; // Factory for initialization
 
     private static readonly Lazy<Version> version = new Lazy<Version>(() => Assembly.GetExecutingAssembly().GetName().Version);
@@ -175,10 +176,8 @@ public class LastfmClient
     {
         var request = CreateRequest("auth.getMobileSession");
 
-        //request.Parameters["username"] = username; //when you get user email and password from ui, pass here to save in their acc
-        //request.Parameters["password"] = password;// when you get user email and password from ui, pass here to save in their acc
-        //request.Parameters["username"] = "Myeblog"; //when you get user email and password from ui, pass here to save in their acc
-        //request.Parameters["password"] = "YvC3-p4PfddGH4H";// when you get user email and password from ui, pass here to save in their acc
+        request.Parameters["username"] = username; //when you get user email and password from ui, pass here to save in their acc
+        request.Parameters["password"] = password;// when you get user email and password from ui, pass here to save in their acc
 
         request.Sign();
 
@@ -399,7 +398,7 @@ public class AuthData
         var auth = new AuthData()
         {
             ApiKey = TEST_API_KEY,
-            ApiSecret = TEST_API_SECRET 
+            ApiSecret = TEST_API_SECRET
         };
 
         int length = args.Length;
