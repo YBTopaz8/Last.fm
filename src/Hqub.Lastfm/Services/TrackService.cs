@@ -246,8 +246,13 @@ class TrackService : ITrackService
         var doc = await request.GetAsync();
 
         var s = ResponseParser.Default;
-
-        return s.ReadObject<Track>(doc.Root.Element("track"));
+        if (ResponseParser.Default.IsStatusOK(doc.Root))
+        {
+            // If status is "ok", then the <track> element is guaranteed to exist.
+            var node = doc.Root.Element("track");
+            return ResponseParser.Default.ReadObject<Track>(node);
+        }
+        return new Track() { IsNull=true };
     }
 
     private async Task<List<Track>> GetSimilarAsync(string? track, string? artist, string? mbid, int limit = 30, bool autocorrect = true)

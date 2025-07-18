@@ -24,8 +24,14 @@ class UserService : IUserService
         var doc = await request.GetAsync();
 
         var s = ResponseParser.Default;
-
-        return s.ReadObject<User>(doc.Root.Element("user"));
+        if (ResponseParser.Default.IsStatusOK(doc.Root))
+        {
+            // If status is "ok", then the <track> element is guaranteed to exist.
+            var node = doc.Root.Element("user");
+            return ResponseParser.Default.ReadObject<User>(node);
+        }
+        return new User(string.Empty) { IsNull=true };
+        //return s.ReadObject<User>(doc.Root.Element("user"));
     }
 
     /// <inheritdoc />

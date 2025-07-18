@@ -186,8 +186,12 @@ class ArtistService : IArtistService
         var doc = await request.GetAsync();
 
         var s = ResponseParser.Default;
-
-        return s.ReadObject<Artist>(doc.Root.Element("artist"));
+        if (ResponseParser.Default.IsStatusOK(doc.Root))
+        {
+            var node = doc.Root.Element("artist");
+            return ResponseParser.Default.ReadObject<Artist>(node);
+        }
+        return new Artist() { IsNull=true };
     }
 
     private async Task<List<Artist>> GetSimilarAsync(string? artist, string? mbid, int limit = 30, bool autocorrect = true)
