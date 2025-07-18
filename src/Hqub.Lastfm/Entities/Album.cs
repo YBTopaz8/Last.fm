@@ -65,5 +65,6 @@ public class Album
     /// </summary>
     public Statistics Statistics { get; set; }
 
+    public bool IsNull { get; set; } = false;
     #endregion
 }

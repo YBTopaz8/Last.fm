@@ -98,5 +98,6 @@ public class Track
     /// </summary>
     public bool NowPlaying { get; internal set; }
 
+    public bool IsNull { get; set; } = false;
     #endregion
 }

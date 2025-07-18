@@ -65,5 +65,6 @@ public class Artist
     /// </summary>
     public Biography Biography { get; set; }
 
+    public bool IsNull { get; set; } = false;
     #endregion
 }

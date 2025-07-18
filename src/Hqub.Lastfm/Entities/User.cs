@@ -79,4 +79,6 @@ public class User
     {
         Name = name;
     }
+
+    public bool IsNull { get; set; }
 }
