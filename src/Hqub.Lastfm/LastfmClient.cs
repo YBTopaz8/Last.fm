@@ -212,6 +212,10 @@ public class LastfmClient
     /// </summary>
     public async Task AuthenticateViaWebAsync()
     {
+        if (token is null)
+        {
+            throw new NullReferenceException("Token is Null, Authorize App First");
+        }
         var request = CreateRequest("auth.getSession");
 
         request.Parameters["token"] = token;
