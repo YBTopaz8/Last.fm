@@ -21,7 +21,7 @@ class Request
         public string Message { get; set; }
     }
 
-    const string ROOT = "http://ws.audioscrobbler.com/2.0/";
+    //const string ROOT = "http://ws.audioscrobbler.com/2.0/";
     const string ROOT_SSL = "https://ws.audioscrobbler.com/2.0/";
 
     private string method;
@@ -167,11 +167,10 @@ class Request
 
     private string GetRequestString(bool secure, string query = null)
     {
-        string url = secure ? ROOT_SSL : ROOT;
+        string url = ROOT_SSL;
 
         return string.IsNullOrEmpty(query) ? url : url + "?" + query;
     }
-
     private XDocument GetXDocument(Stream stream)
     {
         TextReader treader = new StreamReader(stream);
