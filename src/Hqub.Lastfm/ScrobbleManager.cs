@@ -60,7 +60,6 @@ class ScrobbleManager
 
             i++;
         }
-        Debug.WriteLine(response.ToString());
         return response;
     }
 
