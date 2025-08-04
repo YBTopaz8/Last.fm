@@ -185,11 +185,18 @@ class ArtistService : IArtistService
 
         var doc = await request.GetAsync();
 
-        var s = ResponseParser.Default;
-        if (ResponseParser.Default.IsStatusOK(doc.Root))
+        if (doc is not null)
         {
-            var node = doc.Root.Element("artist");
-            return ResponseParser.Default.ReadObject<Artist>(node);
+
+            if (ResponseParser.Default.IsStatusOK(doc.Root))
+            {
+                if (doc.Root is not null)
+                {
+                    var node = doc.Root.Element("artist");
+                    return ResponseParser.Default.ReadObject<Artist>(node);
+
+                }
+            }
         }
         return new Artist() { IsNull=true };
     }
