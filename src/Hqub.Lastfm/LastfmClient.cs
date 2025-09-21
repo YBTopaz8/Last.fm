@@ -210,11 +210,11 @@ public class LastfmClient
     /// <summary>
     /// Complete the web authentication.
     /// </summary>
-    public async Task AuthenticateViaWebAsync()
+    public async Task<bool> AuthenticateViaWebAsync()
     {
         if (token is null)
         {
-            throw new NullReferenceException("Token is Null, Authorize App First");
+            return false;
         }
         var request = CreateRequest("auth.getSession");
 
@@ -227,6 +227,7 @@ public class LastfmClient
         token = null;
 
         Session.SessionKey = doc.Root.Element("session").Element("key").Value;
+        return true;
     }
 
     #endregion
