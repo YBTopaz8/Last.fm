@@ -16,7 +16,7 @@ using System.Threading.Tasks;
 public class LastfmClient
 {
     private static LastfmClient _instance;
-    private static readonly object _lock = new object();
+    private static readonly System.Threading.Lock _lock = new();
     private static Func<LastfmClient> _factory; // Factory for initialization
 
     private static readonly Lazy<Version> version = new Lazy<Version>(() => Assembly.GetExecutingAssembly().GetName().Version);
