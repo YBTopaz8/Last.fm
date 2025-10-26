@@ -96,9 +96,13 @@ class Request
                 return GetXDocument(stream);
             }
         }
-        catch (Exception)
+        catch( HttpRequestException httpEx)
         {
-            throw;
+            throw new Exception(httpEx.Message, httpEx.InnerException);
+        }
+        catch (Exception ex)
+        {
+            throw new Exception(ex.Message, ex.InnerException);
         }
     }
 
