@@ -1,10 +1,13 @@
 ﻿namespace Hqub.Lastfm.Services;
 
-using Hqub.Lastfm.Entities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+
+using Hqub.Lastfm.Entities;
+
+using static System.Net.Mime.MediaTypeNames;
 
 class ArtistService : IArtistService
 {
@@ -174,6 +177,20 @@ class ArtistService : IArtistService
 #nullable enable
     private async Task<Artist> GetInfoAsync(string? artist, string? mbid, bool autocorrect = true)
     {
+        try
+        {
+
+        }
+        catch (TaskCanceledException tex)
+        {
+            Console.WriteLine(tex.Message);
+        }
+        catch (Exception ex)
+        {
+
+            Console.WriteLine(ex.Message);
+            //throw;
+        }
         var request = client.CreateRequest("artist.getInfo");
 
         SetParameters(request, artist, mbid, autocorrect);
