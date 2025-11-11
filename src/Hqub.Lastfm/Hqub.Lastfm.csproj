@@ -25,4 +25,14 @@
     <LangVersion>latest</LangVersion>
   </PropertyGroup>
 
+  <ItemGroup>
+    <Folder Include="Utils\StaticUtils\TaskBarSection\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="Views\DimmerWin.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </None>
+  </ItemGroup>
+
 </Project>
