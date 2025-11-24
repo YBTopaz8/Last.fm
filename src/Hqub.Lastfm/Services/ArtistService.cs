@@ -7,8 +7,6 @@ using System.Threading.Tasks;
 
 using Hqub.Lastfm.Entities;
 
-using static System.Net.Mime.MediaTypeNames;
-
 class ArtistService : IArtistService
 {
     private readonly LastfmClient client;
