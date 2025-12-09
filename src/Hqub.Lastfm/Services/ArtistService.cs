@@ -180,17 +180,6 @@ class ArtistService : IArtistService
         try
         {
 
-        }
-        catch (TaskCanceledException tex)
-        {
-            Console.WriteLine(tex.Message);
-        }
-        catch (Exception ex)
-        {
-
-            Console.WriteLine(ex.Message);
-            //throw;
-        }
         var request = client.CreateRequest("artist.getInfo");
 
         SetParameters(request, artist, mbid, autocorrect);
@@ -216,6 +205,20 @@ class ArtistService : IArtistService
             }
         }
         return new Artist() { IsNull=true };
+
+        }
+        catch (TaskCanceledException tex)
+        {
+            Console.WriteLine(tex.Message);
+            throw new Exception(tex.Message);
+        }
+        catch (Exception ex)
+        {
+
+            Console.WriteLine(ex.Message);
+            throw new Exception(ex.Message);
+
+        }
     }
 
     private async Task<List<Artist>> GetSimilarAsync(string? artist, string? mbid, int limit = 30, bool autocorrect = true)
