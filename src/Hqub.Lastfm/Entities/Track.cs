@@ -99,6 +99,12 @@ public class Track
     /// </summary>
     public bool NowPlaying { get; set; }
 
+    /// <summary>
+    /// Gets or sets a value indicating whether the track is available on the present device.
+    /// </summary>
+    public bool IsOnPresentDevice { get; set; }
+    public string OnDeviceObjectId { get; set; } = string.Empty;
+
     public bool IsNull { get; set; } = false;
     #endregion
 }
