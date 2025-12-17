@@ -97,7 +97,13 @@ public class Track
     /// <summary>
     /// Gets or sets now playing status (available only for users, i.e. user.getRecentTracks).
     /// </summary>
-    public bool NowPlaying { get; internal set; }
+    public bool NowPlaying { get; set; }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether the track is available on the present device.
+    /// </summary>
+    public bool IsOnPresentDevice { get; set; }
+    public string OnDeviceObjectId { get; set; } = string.Empty;
 
     public bool IsNull { get; set; } = false;
     #endregion

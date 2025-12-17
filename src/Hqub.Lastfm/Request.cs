@@ -98,11 +98,11 @@ class Request
         }
         catch( HttpRequestException httpEx)
         {
-            throw new Exception(httpEx.Message, httpEx.InnerException);
+            return default;
         }
         catch (Exception ex)
         {
-            throw new Exception(ex.Message, ex.InnerException);
+            return default;
         }
     }
 

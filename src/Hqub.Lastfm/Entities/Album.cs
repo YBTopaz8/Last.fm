@@ -66,5 +66,6 @@ public class Album
     public Statistics Statistics { get; set; }
 
     public bool IsNull { get; set; } = false;
+    public bool IsOnPresentDevice { get; set; }
     #endregion
 }
