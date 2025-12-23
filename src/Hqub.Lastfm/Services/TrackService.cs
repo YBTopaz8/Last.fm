@@ -246,11 +246,14 @@ class TrackService : ITrackService
         var doc = await request.GetAsync();
 
         var s = ResponseParser.Default;
-        if (ResponseParser.Default.IsStatusOK(doc.Root))
+        if (doc != null)
         {
-            // If status is "ok", then the <track> element is guaranteed to exist.
-            var node = doc.Root.Element("track");
-            return ResponseParser.Default.ReadObject<Track>(node);
+            if (ResponseParser.Default.IsStatusOK(doc.Root))
+            {
+                // If status is "ok", then the <track> element is guaranteed to exist.
+                var node = doc.Root.Element("track");
+                return ResponseParser.Default.ReadObject<Track>(node);
+            }
         }
         return new Track() { IsNull=true };
     }
