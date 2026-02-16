@@ -138,10 +138,14 @@ class AlbumService : IAlbumService
         var doc = await request.GetAsync();
 
         var s = ResponseParser.Default;
-        if (ResponseParser.Default.IsStatusOK(doc.Root))
+        if (doc is not null)
         {
-            var node = doc.Root.Element("album");
-            return ResponseParser.Default.ReadObject<Album>(node);
+            if (ResponseParser.Default.IsStatusOK(doc.Root) && doc.Root is not null)
+            {
+                
+                var node = doc.Root.Element("album");
+                return ResponseParser.Default.ReadObject<Album>(node);
+            }
         }
         return new Album() { IsNull=true };
     }
