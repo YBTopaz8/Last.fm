@@ -14,7 +14,7 @@ class UserService : IUserService
         this.client = client;
     }
 
-    /// <inheritdoc />
+    /// <inheritdoc/>
     public async Task<User> GetInfoAsync(string user = null)
     {
         var request = client.CreateRequest("user.getInfo");
@@ -24,12 +24,16 @@ class UserService : IUserService
         var doc = await request.GetAsync();
 
         var s = ResponseParser.Default;
-        if (ResponseParser.Default.IsStatusOK(doc.Root))
+        if(doc is not null)
         {
-            // If status is "ok", then the <track> element is guaranteed to exist.
-            var node = doc.Root.Element("user");
-            return ResponseParser.Default.ReadObject<User>(node);
+            if(ResponseParser.Default.IsStatusOK(doc.Root))
+            {
+                // If status is "ok", then the <track> element is guaranteed to exist.
+                var node = doc.Root.Element("user");
+                return ResponseParser.Default.ReadObject<User>(node);
+            }
         }
+    
         return new User(string.Empty) { IsNull=true };
         //return s.ReadObject<User>(doc.Root.Element("user"));
     }
