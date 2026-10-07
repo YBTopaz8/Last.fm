@@ -1,8 +1,10 @@
-﻿namespace Hqub.Lastfm.Entities;
+﻿
+namespace Hqub.Lastfm.Entities;
 
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Linq;
 using System.Runtime.Serialization;
 
 /// <summary>
@@ -73,6 +75,8 @@ public class Track
     /// Gets or sets a list of images.
     /// </summary>
     public List<Image> Images { get; set; }
+
+    public string? LargestImgUrl => Images?.Where(x => x.Size == "mega").First().Url;
 
     /// <summary>
     /// Gets or sets a list of tags.
