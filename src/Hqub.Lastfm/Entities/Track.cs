@@ -76,7 +76,7 @@ public class Track
     /// </summary>
     public List<Image> Images { get; set; }
 
-    public string? LargestImgUrl => Images?.Where(x => x.Size == "mega").First().Url;
+    public string? LargestImgUrl => Images?.Where(x => x.Size == "extralarge").FirstOrDefault()?.Url;
 
     /// <summary>
     /// Gets or sets a list of tags.
